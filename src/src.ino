@@ -37,5 +37,12 @@ void setup() {
 }
 
 void loop() {
-  
+  if (client.connect(server, 80)) {
+    Serial.println("connected to server");
+    client.println("GET /search?q=arduino HTTP/1.1");
+    client.println("Host: " + server);
+    client.println("Connection: close");
+    client.println();
+  }
+  delay(5000)
 }
