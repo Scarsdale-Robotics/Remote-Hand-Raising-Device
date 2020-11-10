@@ -1,48 +1,69 @@
-#include <WiFi.h>
+#include <ESP8266HTTPClient.h>
 
-char ssid[] = "network";
-char pass[] = "password";
-int keyIndex = 0;
+#include <BearSSLHelpers.h>
+#include <CertStoreBearSSL.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiAP.h>
+#include <ESP8266WiFiGeneric.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266WiFiScan.h>
+#include <ESP8266WiFiSTA.h>
+#include <ESP8266WiFiType.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
+#include <WiFiClientSecureAxTLS.h>
+#include <WiFiClientSecureBearSSL.h>
+#include <WiFiServer.h>
+#include <WiFiServerSecure.h>
+#include <WiFiServerSecureAxTLS.h>
+#include <WiFiServerSecureBearSSL.h>
+#include <WiFiUdp.h>
 
-int status = WL_IDLE_STATUS;
-char server[] = "www.google.com";
+#include <Servo.h>
+#include <esp8266wifi.h>
+#include <esp8266httpclient.h>
 
-WiFiClient client;
+const char* ssid = "network name";
+const char* pass = "network password";
+
+Servo servo;
 
 void setup() {
   Serial.begin(9600);
-  while (!Serial);
+  WiFi.begin(ssid, pass);
+  Serial.print("Starting...");
+  while (WiFi.status() != WL_CONNECTED) {
 
-  // check for the presence of the shield:
-  if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("WiFi shield not present");
-    while (true);
+    delay(1000);
+    Serial.print("Connecting..");
+
   }
+  servo.attach(5); //D1
+  servo.write(0);
 
-  String fv = WiFi.firmwareVersion();
+  delay(2000);
 
-  if (fv != "1.1.0") {
-    Serial.println("Please upgrade the firmware");
-  }
-  
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    status = WiFi.begin(ssid, pass);
-    delay(10000);
-  }
-
-  Serial.println("Connected to wifi");
-  Serial.println("\nStarting connection to server...");
 }
 
 void loop() {
-  if (client.connect(server, 80)) {
-    Serial.println("connected to server");
-    client.println("GET /search?q=arduino HTTP/1.1");
-    client.println("Host: " + server);
-    client.println("Connection: close");
-    client.println();
+  if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
+    HTTPClient http;  //Declare an object of class HTTPClient
+    http.begin("http://scarsdale-raise-hand.herokuapp.com/api/handRaised/bbbbbbb");  //Specify request destination
+    int httpCode = http.GET();                                                                  //Send the request
+    if (httpCode > 0) { //Check the returning code
+      String payload = http.getString();   //Get the request response payload
+      if (payload.substring(25, 26) == "f") {
+        Serial.print("false");
+        servo.write(0);
+
+      } else {
+        Serial.print("true");
+        servo.write(90);
+
+      }
+    }
+    http.end();   //Close connection
   }
-  delay(5000)
+  delay(200);    //Send a request every 30 seconds
+
 }
