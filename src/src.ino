@@ -64,6 +64,6 @@ void loop() {
     }
     http.end();   //Close connection
   }
-  delay(200);    //Send a request every 30 seconds
+  delay(50);    //Send a request every 0.05 seconds
 
 }
