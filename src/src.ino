@@ -25,8 +25,10 @@
 
 const char* ssid = "network name";
 const char* pass = "network password";
+char classcode[6];
 
 Servo servo;
+HTTPClient http;
 
 void setup() {
   Serial.begin(9600);
@@ -41,14 +43,22 @@ void setup() {
   servo.attach(5); //D1
   servo.write(0);
 
+  http.begin("http://scarsdale-raise-hand.herokuapp.com/api/generateId");  //Specify request destination
+  int httpCode = http.GET();                                                                  //Send the request
+  if (httpCode > 0) { //Check the returning code
+    DynamicJsonDocument doc(2048);
+    deserializeJson(doc, http.getStream());
+    strncpy(classcode, doc["id"], 6);
+  }
+  http.end();   //Close connection  
+
   delay(2000);
 
 }
 
 void loop() {
   if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
-    HTTPClient http;  //Declare an object of class HTTPClient
-    http.begin("http://scarsdale-raise-hand.herokuapp.com/api/handRaised/bbbbbbb");  //Specify request destination
+    http.begin("http://scarsdale-raise-hand.herokuapp.com/api/handRaised/" + classcode);  //Specify request destination
     int httpCode = http.GET();                                                                  //Send the request
     if (httpCode > 0) { //Check the returning code
       String payload = http.getString();   //Get the request response payload
